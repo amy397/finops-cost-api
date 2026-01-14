@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Build and Push to ECR
 
 on:
   push:
@@ -8,12 +8,9 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: finops-cost-api
-  ECS_SERVICE: finops-cost-api-service
-  ECS_CLUSTER: finops-cluster
-  CONTAINER_NAME: finops-cost-api
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -52,25 +49,25 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-    - name: Download task definition
+    - name: Deployment Instructions
       run: |
-        aws ecs describe-task-definition --task-definition finops-cost-api \
-          --query taskDefinition > task-definition.json
-
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-image.outputs.image }}
-
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+        echo "=========================================="
+        echo "🚀 ECR Push Complete!"
+        echo "=========================================="
+        echo ""
+        echo "To deploy on EC2, run:"
+        echo ""
+        echo "  # SSH into EC2"
+        echo "  ssh -i your-key.pem ec2-user@<EC2-IP>"
+        echo ""
+        echo "  # Pull and run"
+        echo "  aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}"
+        echo "  docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
+        echo "  docker stop finops-api || true"
+        echo "  docker rm finops-api || true"
+        echo "  docker run -d --name finops-api -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
+        echo ""
+        echo "=========================================="
