@@ -17,6 +17,7 @@ repositories {
 
 ext {
     set('springCloudVersion', "2023.0.0")
+    set('awsSdkVersion', "2.25.0")
 }
 
 dependencies {
@@ -36,6 +37,24 @@ dependencies {
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // AWS SDK
+    implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
+    implementation 'software.amazon.awssdk:ec2'
+    implementation 'software.amazon.awssdk:rds'
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:lambda'
+    implementation 'software.amazon.awssdk:cloudwatch'
+    implementation 'software.amazon.awssdk:resourcegroupstaggingapi'
+    implementation 'software.amazon.awssdk:pricing'
+    implementation 'software.amazon.awssdk:ses'
+    implementation 'software.amazon.awssdk:sts'
+
+    // PDF Generation (iText 7)
+    implementation 'com.itextpdf:itext7-core:8.0.2'
+
+    // Excel Generation (Apache POI)
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
